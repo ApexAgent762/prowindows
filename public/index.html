@@ -192,10 +192,14 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 const RATE = 0.70;
 let S = { customers: [], jobs: [], expenses: [], status: {} };
 
-function save() { try { localStorage.setItem('pw_v1', JSON.stringify(S)); } catch(e) {} }
-function load() {
-  try { const d = localStorage.getItem('pw_v1'); if (d) S = JSON.parse(d); } catch(e) {}
-  if (!S.status) S.status = {};
+async function save() {
+  try { await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(S) }); }
+  catch(e) { console.error('Save failed:', e); }
+}
+
+async function load() {
+  try { const r = await fetch('/api/data'); S = await r.json(); if (!S.status) S.status = {}; }
+  catch(e) { if (!S.status) S.status = {}; }
 }
 function today() { return new Date().toISOString().split('T')[0]; }
 function fmt(n) { return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
@@ -410,8 +414,7 @@ function toggleDone(cid, season) {
 
 // Set season and load
 document.getElementById('sched-season').value = curSeason();
-load();
-renderAll();
+load().then(() => renderAll());
 </script>
 </body>
 </html>
